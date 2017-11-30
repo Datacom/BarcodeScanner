@@ -21,7 +21,7 @@
 		B2BB8B30EF0245DC64F4025A /* Pods-BarcodeScannerExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BarcodeScannerExample.release.xcconfig"; path = "Pods/Target Support Files/Pods-BarcodeScannerExample/Pods-BarcodeScannerExample.release.xcconfig"; sourceTree = "<group>"; };
 		D50BE3F51C9FE8870000A34C /* BarcodeScannerExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BarcodeScannerExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D50BE3F81C9FE8870000A34C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		D50BE3FA1C9FE8870000A34C /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		D50BE3FA1C9FE8870000A34C /* ViewController.swift */ = {isa = PBXFileReference; indentWidth = 2; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; tabWidth = 2; };
 		D50BE3FF1C9FE8870000A34C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D50BE4021C9FE8870000A34C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D50BE4041C9FE8870000A34C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };

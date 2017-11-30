@@ -45,7 +45,7 @@ public struct Info {
  - Returns: An image.
  */
 func imageNamed(_ name: String) -> UIImage {
-  let cls = BarcodeScannerController.self
+  let cls = BarcodeScannerView.self
   var bundle = Bundle(for: cls)
   let traitCollection = UITraitCollection(displayScale: 3)
 
@@ -62,7 +62,7 @@ func imageNamed(_ name: String) -> UIImage {
 }
 
 func localizedString(_ key: String) -> String {
-  if let path = Bundle(for: BarcodeScannerController.self).resourcePath,
+  if let path = Bundle(for: BarcodeScannerView.self).resourcePath,
     let resourceBundle = Bundle(path: path + "/Localization.bundle") {
     return resourceBundle.localizedString(forKey: key, value: nil, table: "Localizable")
   }

@@ -5,17 +5,12 @@ import AVFoundation
 
 /// Delegate to handle the captured code.
 public protocol BarcodeScannerCodeDelegate: class {
-  func barcodeScanner(_ controller: BarcodeScannerController, didCaptureCode code: String, type: String)
+  func barcodeScanner(_ controller: BarcodeScannerView, didCaptureCode code: String, type: String)
 }
 
 /// Delegate to report errors.
 public protocol BarcodeScannerErrorDelegate: class {
-  func barcodeScanner(_ controller: BarcodeScannerController, didReceiveError error: Error)
-}
-
-/// Delegate to dismiss barcode scanner when the close button has been pressed.
-public protocol BarcodeScannerDismissalDelegate: class {
-  func barcodeScannerDidDismiss(_ controller: BarcodeScannerController)
+  func barcodeScanner(_ controller: BarcodeScannerView, didReceiveError error: Error)
 }
 
 // MARK: - Controller
@@ -27,7 +22,20 @@ public protocol BarcodeScannerDismissalDelegate: class {
  - Unauthorized mode
  - Not found error message
  */
-open class BarcodeScannerController: UIViewController {
+open class BarcodeScannerView: UIView {
+  
+  /// When the flag is set to `true` controller returns a captured code
+  /// and waits for the next reset action.
+  public var isOneTimeSearch = true
+  
+  /// Delegate to handle the captured code.
+  public weak var codeDelegate: BarcodeScannerCodeDelegate?
+  
+  /// Delegate to report errors.
+  public weak var errorDelegate: BarcodeScannerErrorDelegate?
+  
+  /// Flag to lock session from capturing.
+  var locked = false
   
   /// Video capture device.
   lazy var captureDevice: AVCaptureDevice = AVCaptureDevice.default(for: AVMediaType.video)!
@@ -81,7 +89,7 @@ open class BarcodeScannerController: UIViewController {
     didSet {
       
       let delayReset = oldValue == .processing
-      
+
       if !delayReset {
         resetState()
       } else {
@@ -92,23 +100,6 @@ open class BarcodeScannerController: UIViewController {
       }
     }
   }
-
-  
-  /// When the flag is set to `true` controller returns a captured code
-  /// and waits for the next reset action.
-  public var isOneTimeSearch = true
-  
-  /// Delegate to handle the captured code.
-  public weak var codeDelegate: BarcodeScannerCodeDelegate?
-  
-  /// Delegate to report errors.
-  public weak var errorDelegate: BarcodeScannerErrorDelegate?
-  
-  /// Delegate to dismiss barcode scanner when the close button has been pressed.
-  public weak var dismissalDelegate: BarcodeScannerDismissalDelegate?
-  
-  /// Flag to lock session from capturing.
-  var locked = false
   
   // MARK: - Initialization
   
@@ -118,23 +109,32 @@ open class BarcodeScannerController: UIViewController {
   
   // MARK: - View lifecycle
   
-  open override func viewDidLoad() {
-    super.viewDidLoad()
+  public override init(frame: CGRect) {
+    super.init(frame: frame)
+    loadView()
+  }
+  
+  public required init?(coder aDecoder: NSCoder) {
+    super.init(coder: aDecoder)
+    loadView()
+  }
+  
+  open func loadView() {
     
     videoPreviewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
     videoPreviewLayer?.videoGravity = AVLayerVideoGravity.resizeAspectFill
     
-    view.backgroundColor = UIColor.black
+    self.backgroundColor = UIColor.black
     
     guard let videoPreviewLayer = videoPreviewLayer else {
       return
     }
     
-    view.layer.addSublayer(videoPreviewLayer)
+    self.layer.addSublayer(videoPreviewLayer)
     
     [settingsButton, flashButton].forEach {
-        view.addSubview($0)
-        view.bringSubview(toFront: $0)
+        self.addSubview($0)
+        self.bringSubview(toFront: $0)
     }
     
     torchMode = .off
@@ -147,8 +147,8 @@ open class BarcodeScannerController: UIViewController {
       object: nil)
   }
   
-  open override func viewWillAppear(_ animated: Bool) {
-    super.viewWillAppear(animated)
+  override open func willMove(toSuperview newSuperview: UIView?) {
+    super.willMove(toSuperview: newSuperview)
     self.setupFrame()
   }
   
@@ -203,7 +203,7 @@ open class BarcodeScannerController: UIViewController {
     output.metadataObjectTypes = metadata
     videoPreviewLayer?.session = captureSession
     
-    view.setNeedsLayout()
+    setNeedsLayout()
   }
   
   // MARK: - Reset
@@ -213,7 +213,7 @@ open class BarcodeScannerController: UIViewController {
    
    - Parameter animated: Flag to show scanner with or without animation.
    */
-  public func reset(animated: Bool = true) {
+  public func reset() {
     status = .scanning
   }
   
@@ -239,10 +239,10 @@ open class BarcodeScannerController: UIViewController {
   
   // MARK: - Layout
   func setupFrame() {
-    flashButton.frame = CGRect(x: view.frame.width - 50, y: 73, width: 37, height: 37)
+    flashButton.frame = CGRect(x: frame.width - 50, y: 73, width: 37, height: 37)
     
     if let videoPreviewLayer = videoPreviewLayer {
-      videoPreviewLayer.frame = view.layer.bounds
+      videoPreviewLayer.frame = layer.bounds
       if let connection = videoPreviewLayer.connection, connection.isVideoOrientationSupported {
         switch (UIApplication.shared.statusBarOrientation) {
         case .portrait: connection.videoOrientation = .portrait
@@ -265,8 +265,8 @@ open class BarcodeScannerController: UIViewController {
    */
   func center(subview: UIView, inSize size: CGSize) {
     subview.frame = CGRect(
-      x: (view.frame.width - size.width) / 2,
-      y: (view.frame.height - size.height) / 2,
+      x: (frame.width - size.width) / 2,
+      y: (frame.height - size.height) / 2,
       width: size.width,
       height: size.height)
   }
@@ -278,13 +278,13 @@ open class BarcodeScannerController: UIViewController {
    
    - Parameter processing: Flag to set the current state to `.Processing`.
    */
-  func animateFlash(whenProcessing: Bool = false) {
-    let flashView = UIView(frame: view.bounds)
+  func animateFlash(whenProcessing: Bool = false, onComplete: @escaping () -> ()) {
+    let flashView = UIView(frame: bounds)
     flashView.backgroundColor = UIColor.white
     flashView.alpha = 1
     
-    view.addSubview(flashView)
-    view.bringSubview(toFront: flashView)
+    addSubview(flashView)
+    bringSubview(toFront: flashView)
     
     UIView.animate(withDuration: 0.2,
                    animations: {
@@ -296,6 +296,8 @@ open class BarcodeScannerController: UIViewController {
                     if whenProcessing {
                       self?.status = .processing
                     }
+                    
+                    onComplete()
     })
   }
   
@@ -322,7 +324,7 @@ open class BarcodeScannerController: UIViewController {
 
 // MARK: - AVCaptureMetadataOutputObjectsDelegate
 
-extension BarcodeScannerController: AVCaptureMetadataOutputObjectsDelegate {
+extension BarcodeScannerView: AVCaptureMetadataOutputObjectsDelegate {
   
   public func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
     guard !locked else { return }
@@ -347,7 +349,8 @@ extension BarcodeScannerController: AVCaptureMetadataOutputObjectsDelegate {
       rawType = AVMetadataObject.ObjectType.upca.rawValue
     }
     
-    codeDelegate?.barcodeScanner(self, didCaptureCode: code, type: rawType)
-    animateFlash(whenProcessing: isOneTimeSearch)
+    animateFlash(whenProcessing: isOneTimeSearch) { [weak self] in
+      self?.codeDelegate?.barcodeScanner(self!, didCaptureCode: code, type: rawType)
+    }
   }
 }
