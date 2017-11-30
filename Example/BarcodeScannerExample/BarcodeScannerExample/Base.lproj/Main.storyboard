@@ -38,7 +38,7 @@
                     </view>
                     <navigationItem key="navigationItem" title="Barcode Scanner" id="UUc-vE-aWV"/>
                     <connections>
-                        <outlet property="scannerView" destination="IPw-Nc-VGA" id="XNG-Lw-fXJ"/>
+                        <outlet property="scannerView" destination="IPw-Nc-VGA" id="m44-jb-XEZ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="i28-p6-kI8" userLabel="First Responder" sceneMemberID="firstResponder"/>

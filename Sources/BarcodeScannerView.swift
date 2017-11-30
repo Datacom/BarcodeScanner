@@ -46,13 +46,6 @@ open class BarcodeScannerView: UIView {
   /// Video preview layer.
   var videoPreviewLayer: AVCaptureVideoPreviewLayer?
   
-  /// Button to change torch mode.
-  public lazy var flashButton: UIButton = { [unowned self] in
-    let button = UIButton(type: .custom)
-    button.addTarget(self, action: #selector(flashButtonDidPress), for: .touchUpInside)
-    return button
-    }()
-  
   /// Button that opens settings to allow camera usage.
   lazy var settingsButton: UIButton = { [unowned self] in
     let button = UIButton(type: .system)
@@ -68,21 +61,6 @@ open class BarcodeScannerView: UIView {
     
     return button
     }()
-  
-  /// The current torch mode on the capture device.
-  var torchMode: TorchMode = .off {
-    didSet {
-      guard captureDevice.hasFlash else { return }
-      
-      do {
-        try captureDevice.lockForConfiguration()
-        captureDevice.torchMode = torchMode.captureTorchMode
-        captureDevice.unlockForConfiguration()
-      } catch {}
-      
-      flashButton.setImage(torchMode.image, for: UIControlState())
-    }
-  }
   
   /// The current controller's status mode.
   var status: State = .scanning {
@@ -132,31 +110,17 @@ open class BarcodeScannerView: UIView {
     
     self.layer.addSublayer(videoPreviewLayer)
     
-    [settingsButton, flashButton].forEach {
+    [settingsButton].forEach {
         self.addSubview($0)
         self.bringSubview(toFront: $0)
     }
     
-    torchMode = .off
-    
     setupCamera()
-    
-    NotificationCenter.default.addObserver(
-      self, selector: #selector(appWillEnterForeground),
-      name: NSNotification.Name.UIApplicationWillEnterForeground,
-      object: nil)
   }
   
   override open func willMove(toSuperview newSuperview: UIView?) {
     super.willMove(toSuperview: newSuperview)
     self.setupFrame()
-  }
-  
-  /**
-   `UIApplicationWillEnterForegroundNotification` action.
-   */
-  @objc func appWillEnterForeground() {
-    torchMode = .off
   }
   
   // MARK: - Configuration
@@ -221,16 +185,11 @@ open class BarcodeScannerView: UIView {
    Resets the current state.
    */
   func resetState() {
-    let alpha: CGFloat = status == .scanning ? 1 : 0
-    
-    torchMode = .off
     locked = status == .processing && isOneTimeSearch
     
     status == .scanning
       ? captureSession.startRunning()
       : captureSession.stopRunning()
-    
-    flashButton.alpha = alpha
     
     let authorizationStatus = AVCaptureDevice.authorizationStatus(for: AVMediaType.video)
 
@@ -238,9 +197,7 @@ open class BarcodeScannerView: UIView {
   }
   
   // MARK: - Layout
-  func setupFrame() {
-    flashButton.frame = CGRect(x: frame.width - 50, y: 73, width: 37, height: 37)
-    
+  func setupFrame() {    
     if let videoPreviewLayer = videoPreviewLayer {
       videoPreviewLayer.frame = layer.bounds
       if let connection = videoPreviewLayer.connection, connection.isVideoOrientationSupported {
@@ -312,13 +269,6 @@ open class BarcodeScannerView: UIView {
         UIApplication.shared.openURL(settingsURL)
       }
     }
-  }
-  
-  /**
-   Sets the next torch mode.
-   */
-  @objc func flashButtonDidPress() {
-    torchMode = torchMode.next
   }
 }
 
